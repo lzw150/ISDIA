@@ -20,6 +20,9 @@ The tool comes in two versions:
 - ✅ CSV result export
 - ✅ User-friendly GUI or powerful CLI
 
+## MSConvert parameters (if you need to convert .raw or .wiff to mzML)
+The parameters were: --inten64 --mzML --zlib --filter "peakPicking true [1,2]"
+
 ## System Requirements
 
 - **Operating System**: Windows 10/11 or Linux
