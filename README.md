@@ -1,356 +1,262 @@
-﻿# ISDIA - DIA Mass Spectrometry Detection Tool
+<p align="center" style="margin-bottom: 0px !important;">
+   <img width="120" height="127" alt="ISDIA软件logo1_lowsize" src="https://github.com/user-attachments/assets/3e7779ef-02c3-4482-b352-0aa9e3040d98" />
+</p>
 
+# ISDIA v2.0 - DIA Mass Spectrometry Detection Tool
 
 ## Overview
 
-ISDIA is a professional tool for detecting DIA (Data-Independent Acquisition) mode in mass spectrometry data files. It supports multiple file formats including mzML and Bruker timsTOF (.d) files.
+ISDIA is a professional tool for detecting DIA (Data-Independent Acquisition) mode in mass spectrometry data files.
 
-The tool comes in two versions:
+**v2.0 New Features**:
+- ✅ Direct support for **Thermo .raw** files (via msconvert)
+- ✅ Direct support for **SCIEX .wiff** files (via msconvert)
+- ✅ New **.mzXML** format support (built-in XML parser)
+- ✅ Pluggable reader architecture — easy to add more formats
+- ✅ Self-contained distribution — copy and run, no Python installation needed
 
-- **GUI Version**: PyQt5-based graphical interface 
-- **CLI Version**: Command-line interface for batch processing and automation
+## Supported Formats
 
-## Features
+| Format | Extension | Reader | Platform |
+|--------|-----------|--------|----------|
+| mzML | `.mzML` | Built-in XML | Windows / Linux |
+| mzXML | `.mzXML`, `.xml` | Built-in XML | Windows / Linux |
+| Bruker timsTOF | `.d`, `.d.zip` | Built-in SQLite | Windows / Linux |
+| Thermo RAW | `.raw` | msconvert (ProteoWizard) | Windows / Linux |
+| SCIEX WIFF | `.wiff` | msconvert (ProteoWizard) | Windows / Linux |
 
-- ✅ Support for multiple file formats (mzML, .d, .d.zip)
-- ✅ Batch file processing
-- ✅ Intelligent DIA pattern detection
-- ✅ Pulse DIA mode support
-- ✅ Real-time progress tracking
-- ✅ CSV result export
-- ✅ User-friendly GUI or powerful CLI
-
-## MSConvert parameters (if you need to convert .raw or .wiff to mzML)
-The parameters were: --inten64 --mzML --zlib --filter "peakPicking true [1,2]"
-
-## System Requirements
-
-- **Operating System**: Windows 10/11 or Linux
-- **Python**: 3.11+ (for building from source)
-- **Memory**: 4GB+ RAM recommended
-- **Disk Space**: 200MB for installation
+Check format availability:
+```bash
+ISDIA --list-formats
+```
 
 ## Quick Start
 
-### GUI Version (Recommended)
+### Just Copy and Use! (Windows)
 
-1. **Download**: Get `ISDIA_gui.exe` (60.01 MB) from the release
-2. **Run**: Double-click the executable
-3. **Select Files**: Choose input method (direct selection or file list)
-4. **Configure Parameters**: Adjust detection settings if needed
-5. **Start**: Click "开始检测" (Start Detection)
-6. **View Results**: Results are saved to CSV file
+The release package contains both versions — pick whichever you prefer:
 
-**Interface Features**:
+1. **Download**: Get the latest release from [GitHub Releases](https://github.com/guomics-lab/ISDIA/releases)
+2. **Extract**: Unzip to any folder
+3. **Run**: 
+   - **GUI**: Double-click `ISDIA_gui.exe` (graphical interface, recommended)
+   - **CLI**: Open terminal, run `ISDIA.exe <input>` (command line, suitable for batch processing)
+4. **Done** — no Python, no installation required!
 
-- Professional deep blue dark theme
-- Unified circular controls (20px) with clear visibility
-- Real-time progress tracking with visual feedback
-- Comprehensive logging system
+> **Note**: `.raw` / `.wiff` support requires external converter tools. See [Converter Setup](#converter-setup-for-raw--wiff) below to configure them.
+>
+> If the target computer shows an error about missing `msvcp140.dll` or `vcruntime140.dll`, install the [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe) (most Windows 10/11 machines already have this).
+>
+> **Temporary files**: When reading `.raw` or `.wiff` files, ISDIA temporarily converts them to `.mzML` format internally. These temporary files are **automatically deleted** immediately after processing — no cleanup needed, no disk space wasted.
 
-### CLI Version
-
-#### Windows
-
-```powershell
-.\dist\ISDIA.exe --help
-.\dist\ISDIA.exe file_list.txt --output results.csv
-```
-
-#### Linux
+### CLI Usage (Windows Command Line)
 
 ```bash
-./dist/ISDIA --help
-./dist/ISDIA file_list.txt --output results.csv
-```
+# Folder — auto-scan all supported files
+ISDIA D:\data\raw_files
 
-## Building from Source
+# Folder — auto-scan all supported files
+ISDIA D:\data\raw_files
 
-### Prerequisites
+# Glob pattern (use quotes around the path!)
+ISDIA "D:\data\*.raw"
+ISDIA "D:\data\*.d.zip"
 
-Install Python dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-### Build GUI Version (Windows)
-
-```powershell
-.\build_windows_gui_pyqt5.ps1
-```
-
-Output: `dist\ISDIA_gui.exe` (60.01 MB)
-
-### Build CLI Version
-
-**Windows:**
-
-```powershell
-.\build_windows.ps1
-```
-
-**Linux:**
-
-```bash
-chmod +x build_linux.sh
-./build_linux.sh
-```
-
-Output: `dist/ISDIA.exe` (28.82 MB on Windows) or `dist/ISDIA` (Linux)
-
-### Build Both Versions
-
-**Important**: You can build both GUI and CLI versions independently without overwriting each other. The build scripts only clean temporary `build/` directories while preserving the final `dist/` output.
-
-```powershell
-# Build both versions on Windows
-.\build_windows_gui_pyqt5.ps1    # Creates ISDIA_gui.exe
-.\build_windows.ps1              # Creates ISDIA.exe
-
-# Both executables will coexist in dist/ folder
-```
-
-This allows you to:
-
-- Build either version independently
-- Distribute both versions together
-- Update one version without affecting the other
-
-## GUI Version Guide
-
-### Interface Overview
-
-```
-┌─────────────────────────────────────────┐
-│  🔬 DIA Mass Spectrometry Analysis      │
-├─────────────────────────────────────────┤
-│  1. File Input                          │
-│     ○ Direct File Selection             │
-│     ○ File List (txt)                   │
-│                                         │
-│  2. Detection Parameters                │
-│     Max MS2 Count: [11]                 │
-│     Consecutive Threshold: [3]          │
-│     Tolerance: [0.1]                    │
-│     ☑ Enable Pulse DIA Mode             │
-│                                         │
-│  3. Execution                           │
-│     [Start Detection] [View Results]    │
-│     Progress: ████████░░ 80%            │
-│                                         │
-│  4. Processing Log                      │
-│     [Log output area...]                │
-└─────────────────────────────────────────┘
-```
-
-### Parameters
-
-| Parameter             | Description                          | Default | Range  |
-| --------------------- | ------------------------------------ | ------- | ------ |
-| Max MS2 Count         | Maximum MS2 scan count threshold     | 11      | 1-100  |
-| Consecutive Threshold | Consecutive scan detection threshold | 3       | 1-10   |
-| Tolerance             | m/z tolerance for comparison         | 0.1     | 0-1    |
-| Pulse DIA             | Enable Pulse DIA detection mode      | Off     | On/Off |
-| Pulse Tolerance       | Tolerance for Pulse DIA mode         | 0.01    | 0-0.1  |
-
-### File Input Methods
-
-#### Method 1: Direct Selection
-
-1. Select "直接选择文件" (Direct File Selection)
-2. Click "选择文件..." (Select Files)
-3. Choose one or more mzML/.d files
-4. Files appear in the list below
-
-#### Method 2: File List
-
-1. Select "使用文件列表 (txt)" (Use File List)
-2. Prepare a text file with file paths (one per line):
-   ```
-   data/sample1.mzML
-   data/sample2.d
-   data/sample3.d.zip
-   ```
-3. Browse and select the file list
-4. Set base directory if using relative paths
-
-### Output Format
-
-CSV file with columns:
-
-- `filename`: Input file name
-- `is_dia`: True/False (DIA detection result)
-- `ms2_count`: Number of MS2 scans detected
-- `consecutive_windows`: Number of consecutive isolation windows
-- `detection_method`: Detection algorithm used
-
-## CLI Version Guide
-
-### Basic Usage
-
-```bash
-ISDIA <file_list.txt> [options]
-```
-
-### Command-Line Arguments
-
-```
-positional arguments:
-  file_list             Path to text file containing list of files to process
-
-options:
-  -h, --help            Show help message
-  -o, --output OUTPUT   Output CSV file path (default: isdia_results.csv)
-  -d, --base-dir DIR    Base directory for file paths (default: .)
-  --max-ms2 N          Maximum MS2 count threshold (default: 11)
-  --threshold N         Consecutive threshold (default: 3)
-  --tolerance FLOAT     m/z tolerance (default: 0.1)
-  --pulse-dia           Enable Pulse DIA mode
-  --pulse-tol FLOAT     Pulse DIA tolerance (default: 0.01)
-```
-
-### Examples
-
-**Example 1: Basic usage**
-
-```bash
+# File list (.txt)
 ISDIA file_list.txt
-```
 
-**Example 2: Custom output and parameters**
+# Single file
+ISDIA D:\data\sample.raw
 
-```bash
-ISDIA file_list.txt \
-  --output my_results.csv \
-  --max-ms2 15 \
-  --threshold 5
-```
+# Custom output
+ISDIA D:\data --output results.csv
 
-**Example 3: Enable Pulse DIA mode**
+# With custom parameters
+ISDIA D:\data --max-ms2 15 --threshold 5
 
-```bash
-ISDIA file_list.txt \
-  --pulse-dia \
-  --pulse-tol 0.02
-```
+# Disable Pulse DIA detection
+ISDIA D:\data --no-pulse-dia
 
-**Example 4: Specify base directory**
+# Specify converter directory (default: ./converters/)
+ISDIA D:\data --converter-dir "D:\Program Files\ProteoWizard"
 
-```bash
-ISDIA file_list.txt \
-  --base-dir /path/to/data \
-  --output results.csv
+# List supported formats
+ISDIA --list-formats
 ```
 
 ### File List Format
 
-Create a text file (e.g., `file_list.txt`) with one file path per line:
-
+Create a text file with one file path per line:
 ```
 sample001.mzML
-sample002.d
-sample003.d.zip
-subfolder/sample004.mzML
+sample002.mzXML
+sample003.d
+sample004.d.zip
+sample005.raw
+sample006.wiff
+D:\data\sample007.raw
 ```
 
-Supports:
+**Generate file_list.txt from command line:**
 
-- Relative paths (relative to `--base-dir`)
-- Absolute paths
-- Mixed mzML and .d formats
+Windows (PowerShell):
+```powershell
+# All supported files in a folder
+Get-ChildItem D:\data -Recurse -Include *.mzML,*.mzXML,*.d,*.raw,*.wiff | ForEach-Object FullName > file_list.txt
+
+# or using CMD
+dir /b /s D:\data\*.mzML D:\data\*.raw > file_list.txt
+```
+
+Linux:
+```bash
+# All supported files in a folder
+find /d/west -type f \( -name "*.mzML" -o -name "*.mzXML" -o -name "*.raw" -o -name "*.wiff" \) > file_list.txt
+
+# timsTOF .d folders
+find /d/west -type d -name "*.d" > file_list.txt
+```
+
+> **Tip**: In most cases you don't need to create `file_list.txt` manually. Just pass the folder path directly — ISDIA scans it automatically.
+
+### Output Format
+
+CSV file with columns:
+- `FileName`: Input file name
+- `FileExists`: Whether the file was found
+- `MS2Count`: Number of MS2 scans detected
+- `MS2isoContinue`: Number of consecutive isolation windows
+- `ISDIA`: DIA detection result (Yes / No / Unknown)
+- `Format`: File format detected
 
 ## Algorithm Details
 
-### DIA Detection Logic
+ISDIA determines DIA mode by analyzing the isolation window patterns of MS2 scans:
 
-1. **MS2 Scan Analysis**:
+1. **MS2 Scan Collection**: Extract the first N MS2 scans from the file
+2. **Isolation Window Extraction**: Get target m/z, lower offset, upper offset
+3. **Continuity Check**: Check if consecutive windows satisfy:
+   - `targetMZ(i) + 1 <= targetMZ(i+1)`
+   - `iso_upper(i) + tolerance >= iso_lower(i+1)`
+4. **Classification**: >= 3 consecutive windows → DIA; otherwise → DDA
+5. **Pulse DIA** (optional): Check for periodic window patterns with 3 equal m/z differences
 
-   - Count MS2 scans in each file
-   - Check if count exceeds `max-ms2` threshold
-2. **Isolation Window Detection**:
+### Converter Setup for .raw / .wiff
 
-   - Extract isolation windows from MS2 scans
-   - Sort by m/z value
-   - Calculate m/z differences between consecutive windows
-3. **Consecutive Window Check**:
+**Windows**: Install [ProteoWizard](https://proteowizard.sourceforge.io/download.html), then copy **all files** in the installation directory (including `msconvert.exe`, vendor DLLs and other dependencies) to `converters/msconvert/`. Alternatively, use `--converter-dir` to point to the ProteoWizard installation path directly.
 
-   - Compare differences with `tolerance`
-   - Count consecutive windows within tolerance
-   - Report as DIA if count ≥ `threshold`
-4. **Pulse DIA Mode** (Optional):
+**Linux (cluster without sudo)**:
 
-   - Additional check for Pulse DIA patterns
-   - Uses stricter `pulse-tolerance`
-   - Detects periodic window patterns
+Step 1 — install a container runtime (ask your admin, or install yourself via conda):
 
-## Troubleshooting
+```bash
+# Apptainer (Singularity successor) via conda
+conda install -c conda-forge apptainer -y
 
-### Issue: GUI window is blank or unresponsive
+# or the classic SingularityCE
+conda install -c conda-forge singularityce -y
 
-**Solution**: Update graphics drivers or try running in compatibility mode
+# verify
+which apptainer || which singularity
+```
 
-### Issue: "Failed to load file" error
+> **Note**: If neither is available, alternatives are (a) `conda install -c conda-forge wine` to run msconvert.exe under Wine, or (b) pre-convert `.raw`/`.wiff` to `.mzML` on a Windows machine.
 
-**Solution**:
+Step 2 — download the ProteoWizard Singularity container:
+- [pwiz-skyline-i-agree-to-the-vendor-licenses](https://skyline.ms/download/container/pwiz-skyline-i-agree-to-the-vendor-licenses_3.0.24054-2352758.sif) (~1.5 GB)
+- Place the `.sif` file in `converters/msconvert/` and use `--msconvert-container ./converters/msconvert/pwiz-skyline-...sif`.
 
-- Verify file format (mzML, .d, .d.zip)
-- Check file permissions
-- Ensure file is not corrupted
+### Linux Usage
 
-### Issue: Progress bar stuck
+The Linux binary is self-contained (no Python/pip required).
 
-**Solution**:
+```bash
+# Make executable
+chmod +x ISDIA
 
-- Check log output for detailed error messages
-- Verify sufficient disk space
-- Try with a smaller file first
+# Folder — auto-scan all supported files
+./ISDIA /data/raw_files
 
-### Issue: Wrong detection results
+# Glob pattern (use quotes!)
+./ISDIA "/data/*.raw"
+./ISDIA "/data/*.d.zip"
 
-**Solution**:
+# File list (.txt)
+./ISDIA file_list.txt
 
-- Adjust `max-ms2` parameter (increase for more stringent detection)
-- Modify `threshold` value (increase to require more consecutive windows)
-- Try enabling Pulse DIA mode if analyzing Pulse DIA data
+# Custom output and parameters
+./ISDIA /data/raw_files --output results.csv --max-ms2 15 --threshold 5
+
+# Disable Pulse DIA detection
+./ISDIA /data/raw_files --no-pulse-dia
+
+# With Singularity container (cluster without sudo)
+./ISDIA --msconvert-container ./converters/msconvert/pwiz-skyline-i-agree-to-the-vendor-licenses_3.0.24054-2352758.sif /data/raw_files
+
+# List supported formats
+./ISDIA --list-formats
+```
 
 ## Performance
 
-- **Processing Speed**: ~5-10 files/second (depends on file size)
-- **Memory Usage**: ~200-500 MB per instance
-- **Disk I/O**: Optimized for SSD (HDD may be slower)
+| Operation | Speed |
+|-----------|-------|
+| .mzML parsing | ~1-2s / file (depends on file size) |
+| .d (timsTOF) | ~0.1s / file (SQLite query) |
+| .raw (msconvert, progressive) | ~2-10s / file (first 50 scans) |
+| .wiff (msconvert, progressive) | ~2-10s / file (first 50 scans) |
 
-## Version History
+## Troubleshooting
 
-### v2.1 (Current)
+### "Converter not found" error
 
-- ✅ Optimized build scripts for dual-version coexistence
-- ✅ Separate executable names (GUI: `_gui.exe`, CLI: `.exe`)
-- ✅ Unified circular control styling (20px, 3px border)
-- ✅ Improved control visibility and consistency
-- ✅ Window title updated to "ISDIA"
-- ✅ Comprehensive bilingual documentation
+Use `--list-formats` to check converter status. Install missing tools as described above.
 
-### v2.0
+### Missing DLL error (msvcp140.dll / vcruntime140.dll)
 
-- ✅ PyQt5 GUI with professional dark theme
-- ✅ Improved UI controls (radio buttons, checkboxes)
-- ✅ Real-time progress updates
-- ✅ Enhanced error handling
+Install [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe). Most Windows 10/11 systems already include these.
 
-### v1.0
+### .raw file reads slowly
 
-- Initial release with CLI support
-- Basic DIA detection
-- Tkinter GUI (deprecated)
+ISDIA uses progressive scan range (50→500→5000→50000). If all limits are reached, the file may have very few MS2 scans.
 
-## License
+### .raw / .wiff on Linux
 
-MIT License - See LICENSE file for details
+Options:
+1. **Container (recommended)** — install Apptainer/Singularity (`conda install -c conda-forge apptainer`), download the `.sif` file, use `--msconvert-container`. No sudo required.
+2. **Wine** — `sudo apt install wine` (or `conda install -c conda-forge wine`), then copy `msconvert.exe` and vendor DLLs from a Windows ProteoWizard installation into `converters/msconvert/`.
+
+Or pre-convert on a Windows machine.
+
+### Temporary files filling disk
+
+No need to worry — all temporary `.mzML` files from `.raw`/`.wiff` conversion are **automatically deleted** by ISDIA immediately after processing. If a crash occurs mid-conversion, leftover temp files can be found in the system temp directory (usually `%TEMP%`) under names starting with `isdia_` — you can safely delete them manually.
+
+## Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `--output`, `-o` | `isdia_results.csv` | Output CSV file path. |
+| `--max-ms2` | 11 | Maximum number of MS2 scans to extract. The default is an empirical value sufficient for acquisition mode judgment; larger values increase processing time. |
+| `--threshold` | 3 | Number of consecutive isolation windows required to classify as DIA. Increase to reduce false positives. |
+| `--tolerance` | 0.1 | m/z tolerance for comparing adjacent isolation window boundaries. Larger values are more permissive. |
+| `--pulse-dia` | on | Pulse DIA detection mode. Runs automatically as a secondary check; has no effect on standard DIA detection. |
+| `--no-pulse-dia` | — | Disable Pulse DIA detection. |
+| `--pulse-tol` | 0.01 | Tolerance for detecting equal m/z differences in Pulse DIA mode. Smaller values require stricter periodicity. |
+| `--converter-dir` | `./converters/` | Path to msconvert.exe and vendor DLLs (Windows). |
+| `--msconvert-container` | — | Path to Singularity .sif container with Wine + msconvert (Linux clusters). |
+| `--list-formats` | — | Display all supported file formats and converter availability. |
+
+### Parameter Guidance
+
+- **DDA vs DIA discrimination**: Default parameters (`--max-ms2 11 --threshold 3 --tolerance 0.1`) work well for most datasets. If false positives occur, increase `--threshold` or decrease `--tolerance`.
+- **Pulse DIA**: Enabled by default. Pulse DIA check only activates when standard detection fails, acting as a safety net with no impact on normal DIA detection. Disable with `--pulse-dia` off if needed.
+
+## Terms of Use
+
+This software is provided for **academic research use only**. Redistribution must include all original files including the `converters/` directory. The software is protected by Chinese software copyright (Registration No. 2026SR0602039).
 
 ## Citation
-
-If you use this tool in your research, please cite:
 
 ```
 Tiannan Guo, Zhiwei Liu, Wenjie Zhang. ISDIA software [Z]. 2026SR0602039. 2026.
@@ -358,13 +264,8 @@ Tiannan Guo, Zhiwei Liu, Wenjie Zhang. ISDIA software [Z]. 2026SR0602039. 2026.
 
 ## Contact
 
-- **Issues**: Report bugs on GitHub Issues
-- **Email**: liuzhiwei@westlake.edu.cn
+- Email: liuzhiwei@westlake.edu.cn
+- Issues: GitHub Issues
 
-## Acknowledgments
+For commercial cooperation, please contact us.
 
-Developed at Westlake Laboratory for mass spectrometry data analysis.
-
----
-
-**Note**: This tool is for research use only. Always validate results with domain knowledge.
