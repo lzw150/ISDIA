@@ -23,7 +23,7 @@ ISDIA is a professional tool for detecting DIA (Data-Independent Acquisition) mo
 | mzXML | `.mzXML`, `.xml` | Built-in XML | Windows / Linux |
 | Bruker timsTOF | `.d`, `.d.zip` | Built-in SQLite | Windows / Linux |
 | Thermo RAW | `.raw` | msconvert (ProteoWizard) | Windows / Linux |
-| SCIEX WIFF | `.wiff` | msconvert (ProteoWizard) | Windows / Linux |
+| SCIEX WIFF | `.wiff`, `.wiff2` | msconvert (ProteoWizard) | Windows / Linux |
 
 Check format availability:
 ```bash
@@ -43,18 +43,15 @@ The release package contains both versions — pick whichever you prefer:
    - **CLI**: Open terminal, run `ISDIA.exe <input>` (command line, suitable for batch processing)
 4. **Done** — no Python, no installation required!
 
-> **Note**: `.raw` / `.wiff` support requires external converter tools. See [Converter Setup](#converter-setup-for-raw--wiff) below to configure them.
+> **Note**: `.raw` / `.wiff` / `.wiff2` support requires external converter tools. See [Converter Setup](#converter-setup-for-raw--wiff) below to configure them.
 >
 > If the target computer shows an error about missing `msvcp140.dll` or `vcruntime140.dll`, install the [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe) (most Windows 10/11 machines already have this).
 >
-> **Temporary files**: When reading `.raw` or `.wiff` files, ISDIA temporarily converts them to `.mzML` format internally. These temporary files are **automatically deleted** immediately after processing — no cleanup needed, no disk space wasted.
+> **Temporary files**: When reading `.raw`, `.wiff`, or `.wiff2` files, ISDIA temporarily converts them to `.mzML` format internally. These temporary files are **automatically deleted** immediately after processing — no cleanup needed, no disk space wasted.
 
 ### CLI Usage (Windows Command Line)
 
 ```bash
-# Folder — auto-scan all supported files
-ISDIA D:\data\raw_files
-
 # Folder — auto-scan all supported files
 ISDIA D:\data\raw_files
 
@@ -94,7 +91,8 @@ sample003.d
 sample004.d.zip
 sample005.raw
 sample006.wiff
-D:\data\sample007.raw
+sample007.wiff2
+D:\data\sample008.raw
 ```
 
 **Generate file_list.txt from command line:**
@@ -102,7 +100,7 @@ D:\data\sample007.raw
 Windows (PowerShell):
 ```powershell
 # All supported files in a folder
-Get-ChildItem D:\data -Recurse -Include *.mzML,*.mzXML,*.d,*.raw,*.wiff | ForEach-Object FullName > file_list.txt
+Get-ChildItem D:\data -Recurse -Include *.mzML,*.mzXML,*.d,*.raw,*.wiff,*.wiff2 | ForEach-Object FullName > file_list.txt
 
 # or using CMD
 dir /b /s D:\data\*.mzML D:\data\*.raw > file_list.txt
@@ -111,7 +109,7 @@ dir /b /s D:\data\*.mzML D:\data\*.raw > file_list.txt
 Linux:
 ```bash
 # All supported files in a folder
-find /d/west -type f \( -name "*.mzML" -o -name "*.mzXML" -o -name "*.raw" -o -name "*.wiff" \) > file_list.txt
+find /d/west -type f \( -name "*.mzML" -o -name "*.mzXML" -o -name "*.raw" -o -name "*.wiff" -o -name "*.wiff2" \) > file_list.txt
 
 # timsTOF .d folders
 find /d/west -type d -name "*.d" > file_list.txt
@@ -164,7 +162,7 @@ which apptainer || which singularity
 
 Step 2 — download the ProteoWizard Singularity container:
 - [pwiz-skyline-i-agree-to-the-vendor-licenses](https://skyline.ms/download/container/pwiz-skyline-i-agree-to-the-vendor-licenses_3.0.24054-2352758.sif) (~1.5 GB)
-- Place the `.sif` file in `converters/msconvert/` and use `--msconvert-container ./converters/msconvert/pwiz-skyline-...sif`.
+- Place the `.sif` file in `converters/msconvert/`. ISDIA auto-detects it — no `--msconvert-container` flag needed. (Explicit flag still works and takes priority.)
 
 ### Linux Usage
 
@@ -190,7 +188,10 @@ chmod +x ISDIA
 # Disable Pulse DIA detection
 ./ISDIA /data/raw_files --no-pulse-dia
 
-# With Singularity container (cluster without sudo)
+# With Singularity container (cluster without sudo) — auto-detected from converters/
+./ISDIA /data/raw_files
+
+# Explicit container path (optional, overrides auto-detection)
 ./ISDIA --msconvert-container ./converters/msconvert/pwiz-skyline-i-agree-to-the-vendor-licenses_3.0.24054-2352758.sif /data/raw_files
 
 # List supported formats
@@ -216,10 +217,6 @@ Use `--list-formats` to check converter status. Install missing tools as describ
 
 Install [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe). Most Windows 10/11 systems already include these.
 
-### .raw file reads slowly
-
-ISDIA uses progressive scan range (50→500→5000→50000). If all limits are reached, the file may have very few MS2 scans.
-
 ### .raw / .wiff on Linux
 
 Options:
@@ -230,7 +227,7 @@ Or pre-convert on a Windows machine.
 
 ### Temporary files filling disk
 
-No need to worry — all temporary `.mzML` files from `.raw`/`.wiff` conversion are **automatically deleted** by ISDIA immediately after processing. If a crash occurs mid-conversion, leftover temp files can be found in the system temp directory (usually `%TEMP%`) under names starting with `isdia_` — you can safely delete them manually.
+No need to worry — all temporary `.mzML` files from `.raw`/`.wiff`/`.wiff2` conversion are **automatically deleted** by ISDIA immediately after processing. If a crash occurs mid-conversion, leftover temp files can be found in the system temp directory (usually `%TEMP%`) under names starting with `isdia_` — you can safely delete them manually.
 
 ## Parameters
 
@@ -250,7 +247,7 @@ No need to worry — all temporary `.mzML` files from `.raw`/`.wiff` conversion 
 ### Parameter Guidance
 
 - **DDA vs DIA discrimination**: Default parameters (`--max-ms2 11 --threshold 3 --tolerance 0.1`) work well for most datasets. If false positives occur, increase `--threshold` or decrease `--tolerance`.
-- **Pulse DIA**: Enabled by default. Pulse DIA check only activates when standard detection fails, acting as a safety net with no impact on normal DIA detection. Disable with `--pulse-dia` off if needed.
+- **Pulse DIA**: Enabled by default. Pulse DIA check only activates when standard detection fails, acting as a safety net with no impact on normal DIA detection. Disable with `--no-pulse-dia` if needed.
 
 ## Terms of Use
 
