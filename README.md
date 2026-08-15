@@ -49,6 +49,9 @@ The release package contains both versions — pick whichever you prefer:
 >
 > **Temporary files**: When reading `.raw`, `.wiff`, or `.wiff2` files, ISDIA temporarily converts them to `.mzML` format internally. These temporary files are **automatically deleted** immediately after processing — no cleanup needed, no disk space wasted.
 
+### Windows GUI
+<img width="2350" height="1469" alt="GUI_shortcut" src="https://github.com/user-attachments/assets/026bf8fa-0e67-489a-a402-a24059b4a68d" />
+
 ### CLI Usage (Windows Command Line)
 
 ```bash
