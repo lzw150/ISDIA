@@ -163,9 +163,13 @@ which apptainer || which singularity
 
 > **Note**: If neither is available, alternatives are (a) `conda install -c conda-forge wine` to run msconvert.exe under Wine, or (b) pre-convert `.raw`/`.wiff` to `.mzML` on a Windows machine.
 
-Step 2 — download the ProteoWizard Singularity container:
-- [pwiz-skyline-i-agree-to-the-vendor-licenses](https://skyline.ms/download/container/pwiz-skyline-i-agree-to-the-vendor-licenses_3.0.24054-2352758.sif) (~1.5 GB)
-- Place the `.sif` file in `converters/msconvert/`. ISDIA auto-detects it — no `--msconvert-container` flag needed. (Explicit flag still works and takes priority.)
+Step 2 — build the ProteoWizard Singularity container from Docker Hub:
+
+```bash
+singularity pull pwiz.sif docker://proteowizard/pwiz-skyline-i-agree-to-the-vendor-licenses
+```
+
+- This downloads `pwiz.sif` (~2 GB). Place it in `converters/msconvert/`. ISDIA auto-detects it — no `--msconvert-container` flag needed. (Explicit flag still works and takes priority.)
 
 ### Linux Usage
 
@@ -195,7 +199,7 @@ chmod +x ISDIA
 ./ISDIA /data/raw_files
 
 # Explicit container path (optional, overrides auto-detection)
-./ISDIA --msconvert-container ./converters/msconvert/pwiz-skyline-i-agree-to-the-vendor-licenses_3.0.24054-2352758.sif /data/raw_files
+./ISDIA --msconvert-container ./converters/msconvert/pwiz.sif /data/raw_files
 
 # List supported formats
 ./ISDIA --list-formats
@@ -219,6 +223,10 @@ Use `--list-formats` to check converter status. Install missing tools as describ
 ### Missing DLL error (msvcp140.dll / vcruntime140.dll)
 
 Install [Visual C++ Redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe). Most Windows 10/11 systems already include these.
+
+### .raw file reads slowly
+
+ISDIA uses progressive scan range (50→500→5000→50000). If all limits are reached, the file may have very few MS2 scans.
 
 ### .raw / .wiff on Linux
 
@@ -268,4 +276,3 @@ Tiannan Guo, Zhiwei Liu, Wenjie Zhang. ISDIA software [Z]. 2026SR0602039. 2026.
 - Issues: GitHub Issues
 
 For commercial cooperation, please contact us.
-
